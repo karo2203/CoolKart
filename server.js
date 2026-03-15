@@ -2,6 +2,7 @@ const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 require("dotenv").config()
+const path = require("path")
 
 const authRoutes = require("./authRoutes")
 const menuRoutes = require("./menuRoutes")
@@ -20,8 +21,8 @@ app.use("/api/auth", authRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/orders", orderRoutes)
 
-app.get("/",(req,res)=>{
-res.send("Stallify API Running")
+app.get("/", (req, res) => {
+res.sendFile(path.join(__dirname, "index.html"))
 })
 
 const PORT = process.env.PORT || 5000
