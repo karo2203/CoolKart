@@ -25,7 +25,7 @@ app.use("/api/orders", orderRoutes)
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
-});z
+});
 
 const PORT = process.env.PORT || 5000
 
