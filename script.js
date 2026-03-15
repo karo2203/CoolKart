@@ -1,5 +1,5 @@
 // Base URL for API
-const API_URL = 'http://localhost:5000/api';
+const API_URL = "https://coolkart.onrender.com";
 
 // Toast Notification System
 function showToast(message) {
@@ -35,7 +35,7 @@ async function apiFetch(endpoint, options = {}) {
   }
   
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+   const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers
     });
