@@ -23,8 +23,6 @@ app.use("/api/auth", authRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/orders", orderRoutes)
 
-const path = require("path");
-
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });z
