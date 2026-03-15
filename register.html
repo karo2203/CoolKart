@@ -36,7 +36,7 @@
                 btn.disabled = true;
                 btn.innerText = 'Creating account...';
                 
-                await apiFetch('/auth/register', {
+                await apiFetch('/api/auth/register', {
                     method: 'POST',
                     body: JSON.stringify({ name, email, password })
                 });
