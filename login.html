@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stallify - Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container fade-in">
+        <div class="glass-card auth-card">
+            <div class="logo">🍦</div>
+            <h2>Welcome Back</h2>
+            <form id="loginForm">
+                <input type="email" id="email" class="glass-input" placeholder="Email Address" required>
+                <input type="password" id="password" class="glass-input" placeholder="Password" required>
+                <button type="submit" class="neon-btn">Sign In</button>
+            </form>
+            <div class="auth-links">
+                Don't have an account? <a href="register.html">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = e.target.querySelector('button');
+            
+            try {
+                btn.disabled = true;
+                btn.innerText = 'Signing in...';
+                
+                const data = await apiFetch('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                localStorage.setItem('stallify_token', data.token);
+                localStorage.setItem('stallify_user', JSON.stringify({ name: data.name, id: data.userId }));
+                
+                showToast('Login successful!');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (error) {
+                btn.disabled = false;
+                btn.innerText = 'Sign In';
+            }
+        });
+    </script>
+    <footer class="site-footer">
+        <p>Developed by <strong>Karoliya Agin Doli</strong></p>
+        <p>Email: karoliyaagindoli22@gmail.com</p>
+        <p>
+            GitHub:
+            <a href="https://github.com/karo2203" target="_blank">
+                github.com/karo2203
+            </a>
+        </p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stallify - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 20px 30px;
+            margin-bottom: 30px;
+            border-radius: 0 0 16px 16px;
+        }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(1, 1fr); gap: 20px; padding: 0 30px 30px;
+        }
+        @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .stat-card { text-align: center; }
+        .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--neon-purple); margin-top: 10px; }
+        
+        .orders-container { padding: 0 30px 50px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: var(--text-secondary); font-weight: 500; }
+        
+        .status-select { 
+            background: var(--bg-1); color: white; border: 1px solid var(--neon-purple); 
+            padding: 5px 10px; border-radius: 4px; outline: none;
+        }
+        .status-select:focus { box-shadow: var(--neon-glow); }
+        
+        .token-badge {
+            background: rgba(168, 85, 247, 0.2); color: var(--neon-purple);
+            padding: 5px 10px; border-radius: 4px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header class="glass-panel admin-header">
+        <div class="nav-left">
+            <span class="logo">⚙️ Stallify Admin</span>
+        </div>
+        <div class="nav-right">
+            <button class="neon-btn small-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="stats-grid fade-in">
+            <div class="glass-card stat-card">
+                <h3>Today's Orders</h3>
+                <div class="stat-value" id="statOrders">0</div>
+            </div>
+            <div class="glass-card stat-card">
+                <h3>Revenue</h3>
+                <div class="stat-value" id="statRevenue">₹0</div>
+            </div>
+            <div class="glass-card stat-card">
+                <h3>Pending Payments</h3>
+                <div class="stat-value" id="statPending">0</div>
+            </div>
+        </div>
+
+        <div class="orders-container fade-in mt-4">
+            <h2 class="section-title">Recent Orders</h2>
+            <div class="glass-panel" style="padding: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total Amount</th>
+                            <th>Payment Status</th>
+                            <th>Order Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('stallify_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            await fetchStats();
+            await fetchOrders();
+            
+            // Refresh every 10 seconds
+            setInterval(() => {
+                fetchStats();
+                fetchOrders();
+            }, 10000);
+        });
+
+        async function fetchStats() {
+            try {
+                const stats = await apiFetch('/orders/stats', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stallify_token') } });
+                document.getElementById('statOrders').innerText = stats.todayOrders;
+                document.getElementById('statRevenue').innerText = `₹${stats.revenue}`;
+                document.getElementById('statPending').innerText = stats.pendingPayments;
+            } catch (error) {
+                console.error('Failed to fetch stats');
+            }
+        }
+
+        async function fetchOrders() {
+            try {
+                const orders = await apiFetch('/orders', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stallify_token') } });
+                const tbody = document.getElementById('ordersTableBody');
+                tbody.innerHTML = '';
+                
+                orders.forEach(order => {
+                    const itemsHtml = order.items.map(i => `${i.quantity}x ${i.name}`).join('<br>');
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="token-badge">#${order.tokenNumber}</span></td>
+                        <td>${order.customerName}</td>
+                        <td>${itemsHtml}</td>
+                        <td>₹${order.totalAmount}</td>
+                        <td>
+                            <select class="status-select" onchange="updateStatus('${order._id}', 'paymentStatus', this.value)">
+                                <option value="pending" ${order.paymentStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="paid" ${order.paymentStatus === 'paid' ? 'selected' : ''}>Paid</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="status-select" onchange="updateStatus('${order._id}', 'orderStatus', this.value)">
+                                <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="preparing" ${order.orderStatus === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                <option value="ready" ${order.orderStatus === 'ready' ? 'selected' : ''}>Ready</option>
+                                <option value="completed" ${order.orderStatus === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Failed to fetch orders');
+            }
+        }
+
+        async function updateStatus(orderId, field, value) {
+            try {
+                await apiFetch(`/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ [field]: value }),
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('stallify_token') }
+                });
+                showToast(`Updated ${field} successfully`);
+                fetchStats(); 
+            } catch (error) {
+                console.error('Failed to update status');
+            }
+        }
+    </script>
+    <footer class="site-footer">
+        <p>Developed by <strong>Karoliya Agin Doli</strong></p>
+        <p>Email: karoliyaagindoli22@gmail.com</p>
+        <p>
+            GitHub:
+            <a href="https://github.com/karo2203" target="_blank">
+                github.com/karo2203
+            </a>
+        </p>
+    </footer>
+</body>
+</html>
