@@ -13,6 +13,8 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+app.use(express.static(__dirname));
+
 mongoose.connect(process.env.MONGO_URI)
 .then(()=>console.log("MongoDB connected"))
 .catch(err=>console.error("MongoDB connection error:",err))
@@ -21,9 +23,11 @@ app.use("/api/auth", authRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/orders", orderRoutes)
 
+const path = require("path");
+
 app.get("/", (req, res) => {
-res.sendFile(path.join(__dirname, "index.html"))
-})
+  res.sendFile(path.join(__dirname, "index.html"));
+});z
 
 const PORT = process.env.PORT || 5000
 
