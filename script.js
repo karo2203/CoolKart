@@ -35,7 +35,7 @@ async function apiFetch(endpoint, options = {}) {
   }
   
   try {
-   const response = await fetch(`${API_URL}${endpoint}`, {
+   const response = await fetch(`${API_URL}${endpoint}`,{
       ...options,
       headers
     });
