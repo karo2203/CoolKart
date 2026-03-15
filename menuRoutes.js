@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/Order');
+const Order = require("./Order");
 
 const menuItems = [
   { id: 1, name: "Vanilla Scoop", price: 50, category: "ICE CREAM", image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=400&q=80" },
