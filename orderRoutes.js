@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/Order');
+const Order = require("./Order");
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
